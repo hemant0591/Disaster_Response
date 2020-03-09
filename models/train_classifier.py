@@ -12,6 +12,7 @@ import sqlalchemy
 import sqlite3
 from sqlalchemy import create_engine
 import re
+import pickle
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -23,14 +24,15 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, classification_report
 from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 
 
 def load_data(database_filepath):
-    engine = create_engine('sqlite:///DisasterResponse.db')
+    engine = create_engine('sqlite:///{}'.format(database_filepath))
 
     df = pd.read_sql_table("DisasterResponse", con=engine)
 
-    df = df.ix[:19,]
+    #df = df.ix[:899,]
 
     y_columns = ['related', 'request', 'offer',
        'aid_related', 'medical_help', 'medical_products', 'search_and_rescue',
@@ -69,21 +71,24 @@ def build_model():
     ])
 
     parameters = {
-        'vect__ngram_range':((1,1),(1,2)),
-        'vect__max_df':(0.5,0.75,1.0),
-        'vect__max_features':(None, 5000, 10000),
-        'tfidf__use_idf':(True,False),
+        #'vect__ngram_range':((1,1),(1,2)),
+        #'vect__max_df':(0.5,0.75,1.0),
+        #'vect__max_features':(None, 5000, 10000),
+        #'tfidf__use_idf':(True,False),
+        'clf__estimator__n_estimators': [1, 2, 3]
+        #clf__estimator__C" : [0.1,1,10]
         }
 
-    cv = GridSearchCV(pipeline, param_grid=parameters)
+    model = GridSearchCV(pipeline, param_grid=parameters)
 
-    return cv
-
+    return model
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
     y_pred = model.predict(X_test)
     y_test_np = Y_test.to_numpy()
+
+    #print(classification_report(Y_test, y_pred, target_names = category_names))
 
     for i, label in enumerate(category_names):
         print(label)
@@ -94,10 +99,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 def save_model(model, model_filepath):
 
-    import pickle
-    pkl_filename = 'classifier.pkl'
-    with open(pkl_filename, 'wb') as file:
-        pickle.dump(model, file)
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 

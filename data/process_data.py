@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 
 def load_data(messages_filepath, categories_filepath):
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
 
@@ -11,6 +12,7 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+
     categories = df['categories'].str.split(';', expand=True)
     row = categories.iloc[0]
     category_colnames = row.apply(lambda x: x.split('-')[0])
@@ -35,11 +37,12 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
+
     import sqlite3
     import sqlalchemy
     from sqlalchemy import create_engine
 
-    engine = create_engine('sqlite:///DisasterResponse.db')
+    engine = create_engine('sqlite:///{}'.format(database_filename))
     df.to_sql('DisasterResponse', engine, index=False, if_exists='replace')
 
 
