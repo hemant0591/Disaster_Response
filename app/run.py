@@ -19,6 +19,17 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
+
+    """
+    This function takes text as input and transforms it in tokens
+
+    Args:
+            text: input text
+
+    Returns:
+            tokens of the input text
+    """
+
     text = re.sub(r"[^a-zA-z0-9]"," ", text)
 
     stop_words = stopwords.words("english")
@@ -53,6 +64,11 @@ def index():
     #Get top 10 most messages categories
     labels = list(df.iloc[:,4:].sum().sort_values(ascending=False)[:10].index)
     values = list(df.iloc[:,4:].sum().sort_values(ascending=False)[:10])
+
+    #Get average length of messages for each genre
+    df['Message_len'] = df['message'].apply(str.strip).apply(len)
+    labels_len = list(df.groupby('genre')['Message_len'].mean().index)
+    values_len = list(df.groupby('genre')['Message_len'].mean())
 
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
@@ -91,6 +107,25 @@ def index():
                 },
                 'xaxis': {
                     'title': "Category"
+                }
+            }
+        },
+
+        {
+            'data': [
+                Bar(
+                    x=labels_len,
+                    y=values_len
+                )
+            ],
+
+            'layout': {
+                'title': 'Average length of messages by genre',
+                'yaxis': {
+                    'title': "Average length"
+                },
+                'xaxis': {
+                    'title': "Genre"
                 }
             }
         }

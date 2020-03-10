@@ -3,6 +3,20 @@ import pandas as pd
 
 def load_data(messages_filepath, categories_filepath):
 
+    """
+    This function reads csv file and merges them in a single pandas dataframe
+
+    Args:
+
+            messages_filepath: filepath where messages file is saved
+            categories_filepath: filepath where categories file is saved
+
+    Return:
+
+            Pandas dataframe containing messages and categories
+
+    """
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
 
@@ -12,6 +26,17 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+
+    """
+    This function cleans the dataframe so that we can analyze the data better
+
+    Args:
+            dataframe
+
+    Returns:
+            cleaned dataframe
+
+    """
 
     categories = df['categories'].str.split(';', expand=True)
     row = categories.iloc[0]
@@ -37,6 +62,18 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
+
+    """
+    This function takes clean dataframe and stores the data into a sqlite database
+
+    Args:
+            df: dataframe
+            database_filename: filename of the database
+
+    Returns:
+            Nothing
+    
+    """
 
     import sqlite3
     import sqlalchemy

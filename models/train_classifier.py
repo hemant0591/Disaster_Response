@@ -28,6 +28,19 @@ from sklearn.linear_model import LogisticRegression
 
 
 def load_data(database_filepath):
+
+    """
+    This function reads the data from sql database
+
+    Args:
+            database_filepath: filepath where the database is saved
+
+    Returns:
+            X: input features
+            y: target names
+            category_names: column headers of target names
+    """
+
     engine = create_engine('sqlite:///{}'.format(database_filepath))
 
     df = pd.read_sql_table("DisasterResponse", con=engine)
@@ -42,6 +55,16 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+
+    """
+    This function takes text as input and transforms it in tokens
+
+    Args:
+            text: input text
+
+    Returns:
+            tokens of the input text
+    """
 
     text = re.sub(r"[^a-zA-z0-9]"," ", text)
 
@@ -59,6 +82,11 @@ def tokenize(text):
 
 
 def build_model():
+
+    """
+    This function builds the ML pipeline
+    """
+
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
@@ -83,6 +111,16 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+
+    """
+    This model evaluates and prints the scores of the model
+
+    Args:
+            model: ML model
+            X_test: input features test data
+            Y_test: target variables test data
+            category_names: target variables headers
+    """
 
     y_pred = model.predict(X_test)
     y_test_np = Y_test.to_numpy()
