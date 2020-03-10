@@ -2,8 +2,11 @@ import json
 import plotly
 import pandas as pd
 
-from nltk.stem import WordNetLemmatizer
+import re
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+
+from nltk.stem import WordNetLemmatizer
 
 from flask import Flask
 from flask import render_template, request, jsonify
@@ -16,15 +19,16 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
-    text = text.lower()
     text = re.sub(r"[^a-zA-z0-9]"," ", text)
 
-    tokens = word_tokenize(text)
-
     stop_words = stopwords.words("english")
+
+    tokens = word_tokenize(text)
+    tokens = [w for w in tokens if w not in stop_words]
+
     lemmatizer = WordNetLemmatizer()
 
-    tokens = [lemmatizer.lemmatize(word).strip() for word in tokens if word not in stop_words]
+    tokens = [lemmatizer.lemmatize(word).lower().strip() for word in tokens]
 
     return tokens
 
@@ -46,6 +50,7 @@ def index():
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
 
+    #Get top 10 most messages categories
     labels = list(df.iloc[:,4:].sum().sort_values(ascending=False)[:10].index)
     values = list(df.iloc[:,4:].sum().sort_values(ascending=False)[:10])
 
@@ -119,7 +124,7 @@ def go():
 
 
 def main():
-    app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='localhost', port=2020, debug=True)
 
 
 if __name__ == '__main__':

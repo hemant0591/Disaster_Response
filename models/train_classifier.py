@@ -15,7 +15,7 @@ import re
 import pickle
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -34,30 +34,25 @@ def load_data(database_filepath):
 
     #df = df.ix[:899,]
 
-    y_columns = ['related', 'request', 'offer',
-       'aid_related', 'medical_help', 'medical_products', 'search_and_rescue',
-       'security', 'military', 'child_alone', 'water', 'food', 'shelter',
-       'clothing', 'money', 'missing_people', 'refugees', 'death', 'other_aid',
-       'infrastructure_related', 'transport', 'buildings', 'electricity',
-       'tools', 'hospitals', 'shops', 'aid_centers', 'other_infrastructure',
-       'weather_related', 'floods', 'storm', 'fire', 'earthquake', 'cold',
-       'other_weather', 'direct_report']
     X = df['message']
-    y = df[y_columns]
+    y = df.iloc[:,4:]
+    category_names = y.columns
 
-    return X, y, y_columns
+    return X, y, category_names
 
 
 def tokenize(text):
-    text = text.lower()
+
     text = re.sub(r"[^a-zA-z0-9]"," ", text)
 
-    tokens = word_tokenize(text)
-
     stop_words = stopwords.words("english")
+
+    tokens = word_tokenize(text)
+    tokens = [w for w in tokens if w not in stop_words]
+
     lemmatizer = WordNetLemmatizer()
 
-    tokens = [lemmatizer.lemmatize(word).strip() for word in tokens if word not in stop_words]
+    tokens = [lemmatizer.lemmatize(word).lower().strip() for word in tokens]
 
     return tokens
 
@@ -67,7 +62,9 @@ def build_model():
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier())),
+        #('clf', MultiOutputClassifier(RandomForestClassifier())),
+        #("clf", MultiOutputClassifier(LogisticRegression()))
+        ('clf', MultiOutputClassifier(MultinomialNB())),
     ])
 
     parameters = {
@@ -75,8 +72,9 @@ def build_model():
         #'vect__max_df':(0.5,0.75,1.0),
         #'vect__max_features':(None, 5000, 10000),
         #'tfidf__use_idf':(True,False),
-        'clf__estimator__n_estimators': [1, 2, 3]
-        #clf__estimator__C" : [0.1,1,10]
+        #'clf__estimator__n_estimators': [1, 2, 3]
+        'clf__estimator__alpha': [0.01,0.1,1]
+        #"clf__estimator__C" : [0.1,1,10]
         }
 
     model = GridSearchCV(pipeline, param_grid=parameters)
@@ -85,14 +83,19 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+
     y_pred = model.predict(X_test)
     y_test_np = Y_test.to_numpy()
+
+    #target_names=['class0','class1']
 
     #print(classification_report(Y_test, y_pred, target_names = category_names))
 
     for i, label in enumerate(category_names):
+
         print(label)
         print(classification_report(list(y_test_np[:,i]), list(y_pred[:,i])))
+
 
     #print("\nBest Parameters:", model.best_params_)
 
@@ -116,8 +119,8 @@ def main():
         print('Training model...')
         model.fit(X_train, Y_train)
 
-        print("\nBest Parameters:", model.best_params_,"\n")
-        model = model.best_estimator_
+        #print("\nBest Parameters:", model.best_params_,"\n")
+        #model = model.best_estimator_
 
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
