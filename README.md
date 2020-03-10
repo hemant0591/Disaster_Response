@@ -1,5 +1,5 @@
 # Introduction
-This projects aims to build a text processing pipeline so that the overwhelming number of messages received during the disaster time can be classified easily and effectively into the proper categories.
+This project aims to build a text processing pipeline so that the overwhelming number of messages received during the disaster time can be classified easily and effectively into the proper categories.
 
 
 # Disaster Response Pipeline Project
